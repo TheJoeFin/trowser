@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Trowser (Package)": {
+      "commandName": "MsixPackage",
+      "nativeDebugging": false
+    },
+    "Trowser (Unpackaged)": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

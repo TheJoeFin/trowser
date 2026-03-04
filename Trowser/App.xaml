@@ -1,0 +1,31 @@
+<Application
+    x:Class="Trowser.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--  Tray Context Menu Commands  -->
+            <XamlUICommand
+                x:Key="SettingsCommand"
+                Description="Open settings"
+                Label="Settings">
+                <XamlUICommand.IconSource>
+                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" />
+                </XamlUICommand.IconSource>
+            </XamlUICommand>
+
+            <XamlUICommand
+                x:Key="CloseAllCommand"
+                Description="Close all and exit"
+                Label="Close All">
+                <XamlUICommand.IconSource>
+                    <FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE8BB;" />
+                </XamlUICommand.IconSource>
+            </XamlUICommand>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

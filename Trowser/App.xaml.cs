@@ -1,11 +1,10 @@
-using System.Collections.Concurrent;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using Trowser.Contracts.Services;
 using Trowser.Core.Contracts.Services;
 using Trowser.Core.Models;
@@ -14,9 +13,7 @@ using Trowser.Models;
 using Trowser.Services;
 using Trowser.ViewModels;
 using Trowser.Views;
-
 using WinUIEx;
-
 using Application = Microsoft.UI.Xaml.Application;
 
 namespace Trowser;
@@ -27,6 +24,23 @@ public partial class App : Application
     private readonly ConcurrentDictionary<Guid, BrowserWindow> _browserWindows = new();
     private Mutex? _singleInstanceMutex;
     private Views.SettingsWindow? _settingsWindow;
+    private uint _nextTrayIconId = 0;
+
+    private static readonly string _logPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Trowser", "trowser-debug.log");
+
+    internal static void Log(string message)
+    {
+        string line = $"[{DateTime.Now:HH:mm:ss.fff}] {message}";
+        Debug.WriteLine(line);
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_logPath)!);
+            File.AppendAllText(_logPath, line + Environment.NewLine);
+        }
+        catch { /* never let logging break the app */ }
+    }
 
     public IHost Host { get; }
 
@@ -73,11 +87,13 @@ public partial class App : Application
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        // Log and suppress
+        Log($"UNHANDLED EXCEPTION: {e.Exception}");
     }
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        Log($"OnLaunched — PID={Environment.ProcessId} thread={Environment.CurrentManagedThreadId}");
+
         // Single instance enforcement
         const string mutexName = "Global\\Trowser_SingleInstance_Mutex";
 
@@ -86,13 +102,15 @@ public partial class App : Application
             _singleInstanceMutex = new Mutex(true, mutexName, out bool createdNew);
             if (!createdNew)
             {
+                Log("Mutex already held — this is a second instance, exiting");
                 Exit();
                 return;
             }
+            Log("Mutex acquired — this is the primary instance");
         }
-        catch
+        catch (Exception ex)
         {
-            // Continue even if mutex creation fails
+            Log($"Mutex creation failed: {ex.Message} — continuing anyway");
         }
 
         base.OnLaunched(args);
@@ -101,28 +119,37 @@ public partial class App : Application
         MainWindow.Hide();
 
         // Subscribe to config changes
-        var trayService = GetService<ITrayBrowserService>();
-        trayService.ConfigsChanged += async (_, _) => await RefreshTrayIconsAsync();
+        ITrayBrowserService trayService = GetService<ITrayBrowserService>();
+        trayService.ConfigsChanged += async (_, _) =>
+        {
+            Log("ConfigsChanged fired — refreshing tray icons");
+            await RefreshTrayIconsAsync();
+        };
 
+        Log("Starting InitializeTrayIconsAsync");
         await InitializeTrayIconsAsync();
+        Log($"InitializeTrayIconsAsync complete — {_trayIcons.Count} icon(s) registered");
     }
 
     #region Tray Icon Management
 
     private async Task InitializeTrayIconsAsync()
     {
-        var trayService = GetService<ITrayBrowserService>();
-        var configs = await trayService.GetAllAsync();
+        ITrayBrowserService trayService = GetService<ITrayBrowserService>();
+        List<TrayBrowserConfig> configs = await trayService.GetAllAsync();
+
+        Log($"InitializeTrayIconsAsync — {configs.Count} config(s) found");
 
         if (configs.Count == 0)
         {
-            // No browsers configured, create a default tray icon that opens settings
+            Log("No configs — creating default tray icon");
             CreateDefaultTrayIcon();
         }
         else
         {
-            foreach (var config in configs)
+            foreach (TrayBrowserConfig config in configs)
             {
+                Log($"Creating tray icon for config: Id={config.Id} Name='{config.Name}' Url='{config.Url}'");
                 await CreateTrayIconForConfigAsync(config);
             }
         }
@@ -130,62 +157,123 @@ public partial class App : Application
 
     private void CreateDefaultTrayIcon()
     {
-        var defaultId = Guid.Empty;
-        var icon = new TrayIcon((uint)defaultId.GetHashCode(), "Assets/trowser.ico", "Trowser - Right-click for settings");
-        icon.ContextMenu += (sender, args) => args.Flyout = CreateContextMenu();
+        Guid defaultId = Guid.Empty;
+        uint iconId = _nextTrayIconId++;
+        Log($"CreateDefaultTrayIcon — TrayIconId={iconId}");
+        TrayIcon icon = new(iconId, "Assets/trowser.ico", "Trowser - Right-click for settings");
+        icon.ContextMenu += (sender, args) =>
+        {
+            Log("Default icon ContextMenu fired");
+            args.Flyout = CreateContextMenu();
+        };
         icon.Selected += (sender, args) =>
         {
-            // Open settings when no browsers are configured
+            Log("Default icon Selected fired — opening settings");
             OpenSettingsWindow();
         };
         icon.IsVisible = true;
         _trayIcons[defaultId] = icon;
+        Log($"Default tray icon created and visible (TrayIconId={iconId})");
     }
 
     private async Task CreateTrayIconForConfigAsync(TrayBrowserConfig config)
     {
-        var faviconService = GetService<FaviconService>();
-        var iconPath = await faviconService.GetIconPathAsync(config);
+        FaviconService faviconService = GetService<FaviconService>();
+
+        string? iconPath = null;
+        try
+        {
+            iconPath = await faviconService.GetIconPathAsync(config);
+            Log($"Favicon result for '{config.Name}': {iconPath ?? "(null — will use default)"}");
+        }
+        catch (Exception ex)
+        {
+            Log($"Favicon fetch threw: {ex}");
+        }
+
         iconPath ??= "Assets/trowser.ico";
+        Log($"Using icon path: '{iconPath}'");
 
-        var icon = new TrayIcon((uint)config.Id.GetHashCode(), iconPath, $"Trowser - {config.Name}");
-        icon.Selected += (sender, args) => args.Flyout = CreateBrowserFlyout(config);
-        icon.ContextMenu += (sender, args) => args.Flyout = CreateContextMenu();
+        uint iconId = _nextTrayIconId++;
+        Log($"Creating TrayIcon for '{config.Name}' with TrayIconId={iconId} on thread {Environment.CurrentManagedThreadId}");
+
+        TrayIcon icon;
+        try
+        {
+            icon = new(iconId, iconPath, $"Trowser - {config.Name}");
+        }
+        catch (Exception ex)
+        {
+            Log($"TrayIcon constructor threw for '{config.Name}': {ex}");
+            return;
+        }
+
+        icon.Selected += (sender, args) =>
+        {
+            Log($"Selected fired for '{config.Name}' (TrayIconId={iconId})");
+            try
+            {
+                args.Flyout = CreateBrowserFlyout(config);
+                Log($"Flyout created successfully for '{config.Name}'");
+            }
+            catch (Exception ex)
+            {
+                Log($"CreateBrowserFlyout threw for '{config.Name}': {ex}");
+            }
+        };
+        icon.ContextMenu += (sender, args) =>
+        {
+            Log($"ContextMenu fired for '{config.Name}' (TrayIconId={iconId})");
+            try
+            {
+                args.Flyout = CreateContextMenu();
+                Log($"Context menu created successfully for '{config.Name}'");
+            }
+            catch (Exception ex)
+            {
+                Log($"CreateContextMenu threw for '{config.Name}': {ex}");
+            }
+        };
         icon.IsVisible = true;
-
         _trayIcons[config.Id] = icon;
+        Log($"Tray icon for '{config.Name}' created and visible (TrayIconId={iconId})");
     }
 
     private async Task RefreshTrayIconsAsync()
     {
-        // Dispose all existing icons
-        foreach (var kvp in _trayIcons)
+        Log($"RefreshTrayIconsAsync — disposing {_trayIcons.Count} existing icon(s)");
+        foreach (KeyValuePair<Guid, TrayIcon> kvp in _trayIcons)
         {
             kvp.Value.Dispose();
         }
         _trayIcons.Clear();
+        _nextTrayIconId = 0;
 
-        // Recreate from current configs
+        Log("Existing icons disposed — recreating");
         await InitializeTrayIconsAsync();
+        Log($"RefreshTrayIconsAsync complete — {_trayIcons.Count} icon(s) now active");
     }
 
     private Flyout CreateBrowserFlyout(TrayBrowserConfig config)
     {
-        var browserPage = new BrowserPage();
+        Log($"CreateBrowserFlyout for '{config.Name}' Url='{config.Url}'");
+        BrowserPage browserPage = new();
         browserPage.Navigate(config.Url, config.Name, config.Id);
         browserPage.ViewModel.RequestPopOut = () =>
         {
             PopOutBrowser(config);
         };
 
-        var flyout = new Flyout
+        Flyout flyout = new()
         {
             Content = browserPage,
             FlyoutPresenterStyle = CreateNoPaddingStyle(),
         };
 
+        flyout.Opened += (s, e) => Log($"Flyout opened for '{config.Name}'");
         flyout.Closing += (s, e) =>
         {
+            Log($"Flyout closing for '{config.Name}'");
             if (s is Flyout f)
                 f.Content = null;
         };
@@ -195,7 +283,7 @@ public partial class App : Application
 
     private static Style CreateNoPaddingStyle()
     {
-        var style = new Style(typeof(FlyoutPresenter));
+        Style style = new(typeof(FlyoutPresenter));
         style.Setters.Add(new Setter(FlyoutPresenter.PaddingProperty, new Thickness(0)));
         style.Setters.Add(new Setter(FlyoutPresenter.CornerRadiusProperty, new CornerRadius(8)));
         return style;
@@ -203,13 +291,13 @@ public partial class App : Application
 
     private void PopOutBrowser(TrayBrowserConfig config)
     {
-        if (_browserWindows.TryGetValue(config.Id, out var existingWindow))
+        if (_browserWindows.TryGetValue(config.Id, out BrowserWindow? existingWindow))
         {
             existingWindow.Activate();
             return;
         }
 
-        var window = new BrowserWindow(config.Url, config.Name);
+        BrowserWindow window = new(config.Url, config.Name);
         window.Closed += (_, _) => _browserWindows.TryRemove(config.Id, out _);
         _browserWindows[config.Id] = window;
         window.Activate();
@@ -221,13 +309,13 @@ public partial class App : Application
 
     private MenuFlyout CreateContextMenu()
     {
-        var settingsItem = new MenuFlyoutItem
+        MenuFlyoutItem settingsItem = new()
         {
             Command = FindCommand("SettingsCommand"),
         };
         settingsItem.Click += (_, _) => OpenSettingsWindow();
 
-        var closeAllItem = new MenuFlyoutItem
+        MenuFlyoutItem closeAllItem = new()
         {
             Command = FindCommand("CloseAllCommand"),
         };
@@ -268,7 +356,7 @@ public partial class App : Application
     private void ExitApplication()
     {
         // Close all browser windows
-        foreach (var kvp in _browserWindows)
+        foreach (KeyValuePair<Guid, BrowserWindow> kvp in _browserWindows)
         {
             kvp.Value.Close();
         }
@@ -279,7 +367,7 @@ public partial class App : Application
         _settingsWindow = null;
 
         // Dispose all tray icons
-        foreach (var kvp in _trayIcons)
+        foreach (KeyValuePair<Guid, TrayIcon> kvp in _trayIcons)
         {
             kvp.Value.Dispose();
         }

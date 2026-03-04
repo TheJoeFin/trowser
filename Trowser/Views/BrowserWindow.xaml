@@ -13,6 +13,25 @@
     </Window.SystemBackdrop>
 
     <Grid>
-        <WebView2 x:Name="BrowserWebView" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Padding="4,4" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+                <Button x:Name="BackButton" Padding="8,4" IsEnabled="False" Click="BackButton_Click" ToolTipService.ToolTip="Back">
+                    <FontIcon FontSize="14" Glyph="&#xE76B;" />
+                </Button>
+                <Button x:Name="ForwardButton" Padding="8,4" IsEnabled="False" Click="ForwardButton_Click" ToolTipService.ToolTip="Forward">
+                    <FontIcon FontSize="14" Glyph="&#xE76C;" />
+                </Button>
+                <Button x:Name="RefreshButton" Padding="8,4" Click="RefreshButton_Click" ToolTipService.ToolTip="Refresh">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <WebView2 x:Name="BrowserWebView" Grid.Row="1" />
     </Grid>
 </windowex:WindowEx>

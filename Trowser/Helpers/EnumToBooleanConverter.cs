@@ -25,7 +25,12 @@ public class EnumToBooleanConverter : IValueConverter
     {
         if (parameter is string enumString)
         {
-            return Enum.Parse(targetType, enumString);
+            if (value is bool boolValue && boolValue)
+            {
+                return Enum.Parse(targetType, enumString);
+            }
+
+            return DependencyProperty.UnsetValue;
         }
 
         throw new ArgumentException("ExceptionEnumToBooleanConverterParameterMustBeAnEnumName");

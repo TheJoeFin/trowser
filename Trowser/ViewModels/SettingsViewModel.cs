@@ -36,7 +36,21 @@ public partial class SettingsViewModel : ObservableObject
     private string _editIconPath = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsIconModeFetchFavicon))]
+    [NotifyPropertyChangedFor(nameof(IsIconModeCustomFile))]
     private IconMode _editIconMode = IconMode.FetchFavicon;
+
+    public bool IsIconModeFetchFavicon
+    {
+        get => EditIconMode == IconMode.FetchFavicon;
+        set { if (value) EditIconMode = IconMode.FetchFavicon; }
+    }
+
+    public bool IsIconModeCustomFile
+    {
+        get => EditIconMode == IconMode.CustomFile;
+        set { if (value) EditIconMode = IconMode.CustomFile; }
+    }
 
     [ObservableProperty]
     private bool _isEditing;

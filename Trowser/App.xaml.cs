@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.Web.WebView2.Core;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Trowser.Contracts.Services;
@@ -29,6 +30,20 @@ public partial class App : Application
     private static readonly string _logPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Trowser", "trowser-debug.log");
+
+    private static Task<CoreWebView2Environment>? _sharedWebViewEnvironmentTask;
+
+    public static Task<CoreWebView2Environment> GetSharedWebViewEnvironmentAsync()
+    {
+        return _sharedWebViewEnvironmentTask ??= CoreWebView2Environment
+            .CreateWithOptionsAsync(
+                string.Empty,
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Trowser", "WebView2Data"),
+                new CoreWebView2EnvironmentOptions())
+            .AsTask();
+    }
 
     internal static void Log(string message)
     {
@@ -241,15 +256,15 @@ public partial class App : Application
 
     private async Task RefreshTrayIconsAsync()
     {
-        Log($"RefreshTrayIconsAsync — disposing {_trayIcons.Count} existing icon(s)");
+        Log($"RefreshTrayIconsAsync — hiding {_trayIcons.Count} existing icon(s)");
         foreach (KeyValuePair<Guid, TrayIcon> kvp in _trayIcons)
         {
-            kvp.Value.Dispose();
+            kvp.Value.IsVisible = false;
+            GC.SuppressFinalize(kvp.Value);
         }
         _trayIcons.Clear();
-        _nextTrayIconId = 0;
 
-        Log("Existing icons disposed — recreating");
+        Log("Existing icons hidden — recreating");
         await InitializeTrayIconsAsync();
         Log($"RefreshTrayIconsAsync complete — {_trayIcons.Count} icon(s) now active");
     }
@@ -366,10 +381,11 @@ public partial class App : Application
         _settingsWindow?.Close();
         _settingsWindow = null;
 
-        // Dispose all tray icons
+        // Hide all tray icons
         foreach (KeyValuePair<Guid, TrayIcon> kvp in _trayIcons)
         {
-            kvp.Value.Dispose();
+            kvp.Value.IsVisible = false;
+            GC.SuppressFinalize(kvp.Value);
         }
         _trayIcons.Clear();
 

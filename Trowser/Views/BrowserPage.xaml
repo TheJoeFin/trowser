@@ -63,7 +63,6 @@
 
         <WebView2
             x:Name="BrowserWebView"
-            Grid.Row="1"
-            Source="{x:Bind ViewModel.Url, Mode=OneWay}" />
+            Grid.Row="1" />
     </Grid>
 </Page>

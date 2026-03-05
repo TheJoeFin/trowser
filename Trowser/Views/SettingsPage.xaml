@@ -110,11 +110,11 @@
                     <RadioButton
                         Content="Fetch from website"
                         GroupName="IconMode"
-                        IsChecked="{x:Bind ViewModel.EditIconMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=FetchFavicon, Mode=TwoWay}" />
+                        IsChecked="{x:Bind ViewModel.IsIconModeFetchFavicon, Mode=TwoWay}" />
                     <RadioButton
                         Content="Custom .ico file"
                         GroupName="IconMode"
-                        IsChecked="{x:Bind ViewModel.EditIconMode, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=CustomFile, Mode=TwoWay}" />
+                        IsChecked="{x:Bind ViewModel.IsIconModeCustomFile, Mode=TwoWay}" />
                 </StackPanel>
 
                 <Grid>

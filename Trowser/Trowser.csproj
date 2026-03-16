@@ -20,7 +20,7 @@
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
     <GenerateTestArtifacts>False</GenerateTestArtifacts>
-    <AppxBundle>Auto</AppxBundle>
+    <AppxBundle>Never</AppxBundle>
     <WindowsAppSDKSelfContained>True</WindowsAppSDKSelfContained>
     <AppxPackageDir>AppPackages\</AppxPackageDir>
     <AppxBundlePlatforms>x64</AppxBundlePlatforms>

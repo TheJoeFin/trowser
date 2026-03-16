@@ -12,6 +12,9 @@ AppPackages/
 *.nupkg
 **/packages/*
 
+## Secrets / signing config
+Trowser/metadata.json
+
 ## Build results
 [Dd]ebug/
 [Rr]elease/

@@ -1,0 +1,46 @@
+<Page
+    x:Class="Trowser.Views.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <StackPanel
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        MaxWidth="400"
+        Padding="40"
+        Spacing="16">
+
+        <Image
+            Width="80"
+            Height="80"
+            HorizontalAlignment="Center"
+            Source="ms-appx:///Assets/Square150x150Logo.png" />
+
+        <TextBlock
+            FontSize="28"
+            FontWeight="Bold"
+            HorizontalAlignment="Center"
+            Text="Trowser" />
+
+        <TextBlock
+            x:Name="VersionText"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            HorizontalAlignment="Center" />
+
+        <TextBlock
+            HorizontalAlignment="Center"
+            Text="A browser that lives in the tray. Pin your favorite websites as tray icons for instant access."
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Margin="0,8,0,0"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            HorizontalAlignment="Center"
+            Text="© 2025 JoeFinApps" />
+
+    </StackPanel>
+</Page>

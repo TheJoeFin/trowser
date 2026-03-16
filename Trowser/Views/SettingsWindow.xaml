@@ -4,15 +4,58 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:views="using:Trowser.Views"
     xmlns:windowex="using:WinUIEx"
-    Title="Trowser - Settings"
-    Width="700"
-    Height="600"
+    Title="Trowser"
+    Width="900"
+    Height="620"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <views:SettingsPage />
+    <NavigationView
+        x:Name="NavView"
+        IsBackButtonVisible="Collapsed"
+        IsSettingsVisible="False"
+        IsTitleBarAutoPaddingEnabled="True"
+        PaneDisplayMode="Left">
+        <NavigationView.PaneHeader>
+            <StackPanel
+                Height="40"
+                Padding="12,0,0,0"
+                Orientation="Horizontal"
+                Spacing="10">
+                <Image
+                    Width="16"
+                    Height="16"
+                    VerticalAlignment="Center"
+                    Source="ms-appx:///Assets/Square44x44Logo.png" />
+                <TextBlock
+                    x:Name="TitleBarText"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="Trowser" />
+            </StackPanel>
+        </NavigationView.PaneHeader>
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Welcome" Tag="welcome">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE80F;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Browsers" Tag="browsers">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE774;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.MenuItems>
+        <NavigationView.FooterMenuItems>
+            <NavigationViewItem Content="About" Tag="about">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE946;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+        </NavigationView.FooterMenuItems>
+        <Frame x:Name="ContentFrame" />
+    </NavigationView>
 </windowex:WindowEx>

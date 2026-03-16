@@ -1,0 +1,114 @@
+<Page
+    x:Class="Trowser.Views.WelcomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel
+            HorizontalAlignment="Center"
+            MaxWidth="480"
+            Padding="40,40,40,40"
+            Spacing="24">
+
+            <Image
+                Width="80"
+                Height="80"
+                HorizontalAlignment="Center"
+                Source="ms-appx:///Assets/Square150x150Logo.png" />
+
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <TextBlock
+                    FontSize="32"
+                    FontWeight="Bold"
+                    HorizontalAlignment="Center"
+                    Text="Welcome to Trowser" />
+                <TextBlock
+                    FontSize="16"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    HorizontalAlignment="Center"
+                    Text="A browser that lives in the tray" />
+            </StackPanel>
+
+            <TextBlock
+                HorizontalAlignment="Center"
+                Text="Pin your favorite websites to the Windows system tray. Click any tray icon to open a quick browser panel, or pop it out into a full window."
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+
+            <StackPanel Margin="0,8,0,0" Spacing="16">
+                <TextBlock FontSize="15" FontWeight="SemiBold" Text="How it works" />
+
+                <StackPanel Orientation="Horizontal" Spacing="14">
+                    <Border
+                        Width="32"
+                        Height="32"
+                        VerticalAlignment="Top"
+                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        CornerRadius="16">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="1" />
+                    </Border>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="Add a browser shortcut — give it a name and a URL"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="14">
+                    <Border
+                        Width="32"
+                        Height="32"
+                        VerticalAlignment="Top"
+                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        CornerRadius="16">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="2" />
+                    </Border>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="Trowser creates a tray icon using the site's favicon"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="14">
+                    <Border
+                        Width="32"
+                        Height="32"
+                        VerticalAlignment="Top"
+                        Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        CornerRadius="16">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Foreground="White"
+                            Text="3" />
+                    </Border>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="Click the icon to open a quick browser panel from anywhere"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+
+            <Button
+                Margin="0,8,0,0"
+                HorizontalAlignment="Center"
+                Click="GetStartedButton_Click"
+                Content="Add Your First Browser"
+                Style="{ThemeResource AccentButtonStyle}" />
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

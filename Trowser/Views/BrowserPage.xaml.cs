@@ -46,10 +46,10 @@ public sealed partial class BrowserPage : Page
         }
     }
 
-    public void PrepareForFlyout()
+    public void PrepareForFlyout(int width, int height)
     {
-        Width = 400;
-        Height = 600;
+        Width = width;
+        Height = height;
         PopOutButton.Visibility = Visibility.Visible;
     }
 

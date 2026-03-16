@@ -11,7 +11,7 @@ public sealed partial class SettingsWindow : WinUIEx.WindowEx
     {
         InitializeComponent();
         Title = "Trowser";
-        Width = 800;
+        Width = 900;
         Height = 620;
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets/trowser.ico"));
 

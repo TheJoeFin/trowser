@@ -6,8 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:windowex="using:WinUIEx"
     Title="Trowser"
-    Width="900"
-    Height="620"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -15,7 +13,9 @@
 
     <NavigationView
         x:Name="NavView"
+        ExpandedModeThresholdWidth="100"
         IsBackButtonVisible="Collapsed"
+        IsPaneOpen="False"
         IsSettingsVisible="False"
         IsTitleBarAutoPaddingEnabled="True"
         PaneDisplayMode="Left">

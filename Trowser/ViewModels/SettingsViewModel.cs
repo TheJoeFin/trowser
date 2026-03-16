@@ -34,6 +34,12 @@ public partial class SettingsViewModel : ObservableObject
     private string _editIconPath = string.Empty;
 
     [ObservableProperty]
+    private double _editFlyoutWidth = 400;
+
+    [ObservableProperty]
+    private double _editFlyoutHeight = 600;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIconModeFetchFavicon))]
     [NotifyPropertyChangedFor(nameof(IsIconModeCustomFile))]
     private IconMode _editIconMode = IconMode.FetchFavicon;
@@ -92,27 +98,31 @@ public partial class SettingsViewModel : ObservableObject
         Browsers = new ObservableCollection<TrayBrowserConfig>(configs);
     }
 
-    [RelayCommand]
-    private void StartAdd()
+    partial void OnSelectedBrowserChanged(TrayBrowserConfig? value)
     {
-        EditName = string.Empty;
-        EditUrl = string.Empty;
-        EditIconPath = string.Empty;
-        EditIconMode = IconMode.FetchFavicon;
-        EditingId = null;
+        if (value is null) return;
+
+        EditName = value.Name;
+        EditUrl = value.Url;
+        EditIconPath = value.IconPath;
+        EditIconMode = value.IconMode;
+        EditFlyoutWidth = value.FlyoutWidth;
+        EditFlyoutHeight = value.FlyoutHeight;
+        EditingId = value.Id;
         IsEditing = true;
     }
 
     [RelayCommand]
-    private void StartEdit()
+    private void StartAdd()
     {
-        if (SelectedBrowser is null) return;
-
-        EditName = SelectedBrowser.Name;
-        EditUrl = SelectedBrowser.Url;
-        EditIconPath = SelectedBrowser.IconPath;
-        EditIconMode = SelectedBrowser.IconMode;
-        EditingId = SelectedBrowser.Id;
+        SelectedBrowser = null;
+        EditName = string.Empty;
+        EditUrl = string.Empty;
+        EditIconPath = string.Empty;
+        EditIconMode = IconMode.FetchFavicon;
+        EditFlyoutWidth = 400;
+        EditFlyoutHeight = 600;
+        EditingId = null;
         IsEditing = true;
     }
 
@@ -126,17 +136,21 @@ public partial class SettingsViewModel : ObservableObject
             Url = EditUrl,
             IconPath = EditIconPath,
             IconMode = EditIconMode,
+            FlyoutWidth = (int)EditFlyoutWidth,
+            FlyoutHeight = (int)EditFlyoutHeight,
         };
 
         await _trayBrowserService.SaveAsync(config);
         await LoadBrowsersAsync();
         IsEditing = false;
+        SelectedBrowser = null;
     }
 
     [RelayCommand]
     private void CancelEdit()
     {
         IsEditing = false;
+        SelectedBrowser = null;
     }
 
     [RelayCommand]
@@ -147,6 +161,13 @@ public partial class SettingsViewModel : ObservableObject
         await _trayBrowserService.DeleteAsync(SelectedBrowser.Id);
         SelectedBrowser = null;
         await LoadBrowsersAsync();
+    }
+
+    [RelayCommand]
+    private void PopOutBrowser()
+    {
+        if (SelectedBrowser is null) return;
+        ((App)Microsoft.UI.Xaml.Application.Current).OpenBrowserWindow(SelectedBrowser);
     }
 
     [RelayCommand]

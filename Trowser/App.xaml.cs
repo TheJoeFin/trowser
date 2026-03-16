@@ -294,7 +294,7 @@ public partial class App : Application
             existingFlyout.Hide();
         }
 
-        browserPage.PrepareForFlyout();
+        browserPage.PrepareForFlyout(config.FlyoutWidth, config.FlyoutHeight);
         browserPage.ViewModel.RequestPopOut = () =>
         {
             PopOutBrowser(config);
@@ -349,6 +349,8 @@ public partial class App : Application
 
         return false;
     }
+
+    public void OpenBrowserWindow(TrayBrowserConfig config) => PopOutBrowser(config);
 
     private void PopOutBrowser(TrayBrowserConfig config)
     {

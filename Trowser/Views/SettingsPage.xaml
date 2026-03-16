@@ -78,7 +78,6 @@
                     Orientation="Horizontal"
                     Spacing="8">
                     <Button Command="{x:Bind ViewModel.StartAddCommand}" Content="Add New" />
-                    <Button Command="{x:Bind ViewModel.StartEditCommand}" Content="Edit" />
                     <Button Command="{x:Bind ViewModel.ToggleHideBrowserCommand}" Content="{x:Bind ViewModel.HideToggleLabel, Mode=OneWay}" />
                     <Button
                         Command="{x:Bind ViewModel.DeleteBrowserCommand}"
@@ -142,6 +141,30 @@
                         Content="Browse..." />
                 </Grid>
 
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <NumberBox
+                        Grid.Column="0"
+                        Header="Flyout Width (px)"
+                        Maximum="1600"
+                        Minimum="200"
+                        SmallChange="10"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModel.EditFlyoutWidth, Mode=TwoWay}" />
+                    <NumberBox
+                        Grid.Column="2"
+                        Header="Flyout Height (px)"
+                        Maximum="1200"
+                        Minimum="200"
+                        SmallChange="10"
+                        SpinButtonPlacementMode="Inline"
+                        Value="{x:Bind ViewModel.EditFlyoutHeight, Mode=TwoWay}" />
+                </Grid>
+
                 <StackPanel
                     Margin="0,8,0,0"
                     Orientation="Horizontal"
@@ -151,6 +174,13 @@
                         Content="Save"
                         Style="{ThemeResource AccentButtonStyle}" />
                     <Button Command="{x:Bind ViewModel.CancelEditCommand}" Content="Cancel" />
+                    <AppBarSeparator />
+                    <Button Command="{x:Bind ViewModel.PopOutBrowserCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon FontSize="14" Glyph="&#xE8A7;" />
+                            <TextBlock Text="Pop Out" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </StackPanel>
         </Grid>

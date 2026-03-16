@@ -12,7 +12,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Padding="4,4" Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+        <Grid
+            Grid.Row="0"
+            Padding="4,4"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -62,8 +65,6 @@
             </Button>
         </Grid>
 
-        <WebView2
-            x:Name="BrowserWebView"
-            Grid.Row="1" />
+        <WebView2 x:Name="BrowserWebView" Grid.Row="1" />
     </Grid>
 </Page>

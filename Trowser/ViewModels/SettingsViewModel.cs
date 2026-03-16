@@ -1,11 +1,8 @@
-using System.Collections.ObjectModel;
-using System.Windows.Input;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-
 using Microsoft.UI.Xaml;
-
+using System.Collections.ObjectModel;
+using System.Windows.Input;
 using Trowser.Contracts.Services;
 using Trowser.Core.Models;
 
@@ -23,6 +20,7 @@ public partial class SettingsViewModel : ObservableObject
     private ObservableCollection<TrayBrowserConfig> _browsers = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HideToggleLabel))]
     private TrayBrowserConfig? _selectedBrowser;
 
     // Form fields for add/edit
@@ -52,6 +50,8 @@ public partial class SettingsViewModel : ObservableObject
         set { if (value) EditIconMode = IconMode.CustomFile; }
     }
 
+    public string HideToggleLabel => SelectedBrowser?.IsHidden == true ? "Show" : "Hide";
+
     [ObservableProperty]
     private bool _isEditing;
 
@@ -66,21 +66,29 @@ public partial class SettingsViewModel : ObservableObject
         _themeSelectorService = themeSelectorService;
         _elementTheme = _themeSelectorService.Theme;
 
-        SwitchThemeCommand = new RelayCommand<ElementTheme>(async (param) =>
-        {
-            if (ElementTheme != param)
-            {
-                ElementTheme = param;
-                await _themeSelectorService.SetThemeAsync(param);
-            }
-        });
+        SwitchThemeCommand = new AsyncRelayCommand<string?>(SwitchThemeAsync);
 
         _ = LoadBrowsersAsync();
     }
 
+    private async Task SwitchThemeAsync(string? themeName)
+    {
+        if (string.IsNullOrWhiteSpace(themeName) || !Enum.TryParse(themeName, out ElementTheme theme))
+        {
+            App.Log($"SwitchThemeCommand received invalid theme parameter '{themeName ?? "<null>"}'.");
+            return;
+        }
+
+        if (ElementTheme != theme)
+        {
+            ElementTheme = theme;
+            await _themeSelectorService.SetThemeAsync(theme);
+        }
+    }
+
     private async Task LoadBrowsersAsync()
     {
-        var configs = await _trayBrowserService.GetAllAsync();
+        List<TrayBrowserConfig> configs = await _trayBrowserService.GetAllAsync();
         Browsers = new ObservableCollection<TrayBrowserConfig>(configs);
     }
 
@@ -111,7 +119,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveBrowser()
     {
-        var config = new TrayBrowserConfig
+        TrayBrowserConfig config = new()
         {
             Id = EditingId ?? Guid.NewGuid(),
             Name = EditName,
@@ -139,5 +147,17 @@ public partial class SettingsViewModel : ObservableObject
         await _trayBrowserService.DeleteAsync(SelectedBrowser.Id);
         SelectedBrowser = null;
         await LoadBrowsersAsync();
+    }
+
+    [RelayCommand]
+    private async Task ToggleHideBrowser()
+    {
+        if (SelectedBrowser is null) return;
+
+        Guid id = SelectedBrowser.Id;
+        SelectedBrowser.IsHidden = !SelectedBrowser.IsHidden;
+        await _trayBrowserService.SaveAsync(SelectedBrowser);
+        await LoadBrowsersAsync();
+        SelectedBrowser = Browsers.FirstOrDefault(b => b.Id == id);
     }
 }

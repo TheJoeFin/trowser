@@ -6,29 +6,20 @@
     xmlns:helpers="using:Trowser.Helpers"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Trowser.Core.Models"
-    xmlns:xaml="using:Microsoft.UI.Xaml"
     mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+        <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
 
     <Grid Padding="24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!--  Header  -->
-        <TextBlock
-            Grid.Row="0"
-            Margin="0,0,0,16"
-            FontSize="24"
-            FontWeight="Bold"
-            Text="Trowser Settings" />
-
         <!--  Main content  -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
@@ -58,7 +49,19 @@
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="models:TrayBrowserConfig">
                             <StackPanel Padding="4">
-                                <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" />
+                                    <Border
+                                        Padding="4,1"
+                                        VerticalAlignment="Center"
+                                        CornerRadius="4"
+                                        Visibility="{x:Bind IsHidden, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <TextBlock
+                                            FontSize="10"
+                                            Foreground="Orange"
+                                            Text="hidden" />
+                                    </Border>
+                                </StackPanel>
                                 <TextBlock
                                     FontSize="12"
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -76,6 +79,7 @@
                     Spacing="8">
                     <Button Command="{x:Bind ViewModel.StartAddCommand}" Content="Add New" />
                     <Button Command="{x:Bind ViewModel.StartEditCommand}" Content="Edit" />
+                    <Button Command="{x:Bind ViewModel.ToggleHideBrowserCommand}" Content="{x:Bind ViewModel.HideToggleLabel, Mode=OneWay}" />
                     <Button
                         Command="{x:Bind ViewModel.DeleteBrowserCommand}"
                         Content="Delete"
@@ -108,13 +112,15 @@
                 <StackPanel Spacing="4">
                     <TextBlock Text="Icon" />
                     <RadioButton
+                        Checked="FetchFaviconRadioButton_Checked"
                         Content="Fetch from website"
                         GroupName="IconMode"
-                        IsChecked="{x:Bind ViewModel.IsIconModeFetchFavicon, Mode=TwoWay}" />
+                        IsChecked="{x:Bind ViewModel.IsIconModeFetchFavicon, Mode=OneWay}" />
                     <RadioButton
+                        Checked="CustomIconRadioButton_Checked"
                         Content="Custom .ico file"
                         GroupName="IconMode"
-                        IsChecked="{x:Bind ViewModel.IsIconModeCustomFile, Mode=TwoWay}" />
+                        IsChecked="{x:Bind ViewModel.IsIconModeCustomFile, Mode=OneWay}" />
                 </StackPanel>
 
                 <Grid>
@@ -150,39 +156,33 @@
         </Grid>
 
         <!--  Theme selector  -->
-        <StackPanel Grid.Row="2" Margin="0,16,0,0">
+        <StackPanel Grid.Row="1" Margin="0,16,0,0">
             <TextBlock
                 FontSize="16"
                 FontWeight="SemiBold"
                 Text="Personalization" />
-            <StackPanel Margin="0,8,0,0" Orientation="Horizontal" Spacing="12">
+            <StackPanel
+                Margin="0,8,0,0"
+                Orientation="Horizontal"
+                Spacing="12">
                 <RadioButton
                     Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                    CommandParameter="Light"
                     Content="Light"
                     GroupName="AppTheme"
-                    IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}">
-                    <RadioButton.CommandParameter>
-                        <xaml:ElementTheme>Light</xaml:ElementTheme>
-                    </RadioButton.CommandParameter>
-                </RadioButton>
+                    IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Light, Mode=OneWay}" />
                 <RadioButton
                     Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                    CommandParameter="Dark"
                     Content="Dark"
                     GroupName="AppTheme"
-                    IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}">
-                    <RadioButton.CommandParameter>
-                        <xaml:ElementTheme>Dark</xaml:ElementTheme>
-                    </RadioButton.CommandParameter>
-                </RadioButton>
+                    IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Dark, Mode=OneWay}" />
                 <RadioButton
                     Command="{x:Bind ViewModel.SwitchThemeCommand}"
+                    CommandParameter="Default"
                     Content="System Default"
                     GroupName="AppTheme"
-                    IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}">
-                    <RadioButton.CommandParameter>
-                        <xaml:ElementTheme>Default</xaml:ElementTheme>
-                    </RadioButton.CommandParameter>
-                </RadioButton>
+                    IsChecked="{x:Bind ViewModel.ElementTheme, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter=Default, Mode=OneWay}" />
             </StackPanel>
         </StackPanel>
     </Grid>

@@ -19,6 +19,16 @@ public sealed partial class SettingsPage : Page
         InitializeComponent();
     }
 
+    private void FetchFaviconRadioButton_Checked(object sender, RoutedEventArgs e)
+    {
+        ViewModel.IsIconModeFetchFavicon = true;
+    }
+
+    private void CustomIconRadioButton_Checked(object sender, RoutedEventArgs e)
+    {
+        ViewModel.IsIconModeCustomFile = true;
+    }
+
     private async void BrowseIconButton_Click(object sender, RoutedEventArgs e)
     {
         var picker = new FileOpenPicker();

@@ -401,6 +401,11 @@ public partial class App : Application
         if (config != null)
         {
             MenuFlyoutItem hideItem = new() { Text = "Hide Icon" };
+            FontIcon hideIcon = new FontIcon
+            {
+                Glyph = "\uED1A"
+            };
+            hideItem.Icon = hideIcon;
             hideItem.Click += async (_, _) => await HideTrayIconAsync(config);
             menu.Items.Add(hideItem);
             menu.Items.Add(new MenuFlyoutSeparator());

@@ -1,3 +1,4 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Web.WebView2.Core;
 
@@ -7,6 +8,9 @@ namespace Trowser.Views;
 
 public sealed partial class BrowserPage : Page
 {
+    private string? _configuredUrl;
+    private Task? _initializationTask;
+
     public BrowserViewModel ViewModel { get; }
 
     public BrowserPage()
@@ -19,6 +23,58 @@ public sealed partial class BrowserPage : Page
         ViewModel.RequestGoBack = () => BrowserWebView.GoBack();
         ViewModel.RequestGoForward = () => BrowserWebView.GoForward();
         ViewModel.RequestRefresh = () => BrowserWebView.Reload();
+    }
+
+    public void Configure(string url, string name, Guid configId)
+    {
+        ViewModel.Url = url;
+        ViewModel.Name = name;
+        ViewModel.ConfigId = configId;
+
+        if (IsLoaded)
+        {
+            ConfigureAsync(url);
+        }
+        else
+        {
+            void OnLoaded(object sender, RoutedEventArgs e)
+            {
+                Loaded -= OnLoaded;
+                ConfigureAsync(url);
+            }
+            Loaded += OnLoaded;
+        }
+    }
+
+    public void PrepareForFlyout()
+    {
+        Width = 400;
+        Height = 600;
+        PopOutButton.Visibility = Visibility.Visible;
+    }
+
+    public void PrepareForWindow()
+    {
+        Width = double.NaN;
+        Height = double.NaN;
+        PopOutButton.Visibility = Visibility.Collapsed;
+    }
+
+    public void ResetNavigation()
+    {
+        _configuredUrl = null;
+    }
+
+    public void CloseWebView()
+    {
+        _configuredUrl = null;
+        _initializationTask = null;
+
+        try
+        {
+            BrowserWebView.Close();
+        }
+        catch { }
     }
 
     private async void OnCoreWebView2Initialized(WebView2 sender, CoreWebView2InitializedEventArgs args)
@@ -46,13 +102,33 @@ public sealed partial class BrowserPage : Page
         ViewModel.CanGoForward = sender.CanGoForward;
     }
 
-    public async void Navigate(string url, string name, Guid configId)
+    private async void ConfigureAsync(string url)
     {
-        ViewModel.Url = url;
-        ViewModel.Name = name;
-        ViewModel.ConfigId = configId;
+        await EnsureWebViewInitializedAsync();
+
+        if (string.Equals(_configuredUrl, url, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _configuredUrl = url;
+        BrowserWebView.CoreWebView2.Navigate(url);
+    }
+
+    private async Task EnsureWebViewInitializedAsync()
+    {
+        if (BrowserWebView.CoreWebView2 != null)
+        {
+            return;
+        }
+
+        _initializationTask ??= InitializeWebViewAsync();
+        await _initializationTask;
+    }
+
+    private async Task InitializeWebViewAsync()
+    {
         var env = await App.GetSharedWebViewEnvironmentAsync();
         await BrowserWebView.EnsureCoreWebView2Async(env);
-        BrowserWebView.CoreWebView2.Navigate(url);
     }
 }

@@ -9,19 +9,20 @@
 </p>
 
 <p align="center">
-  <img src="Screenshot-JFA.png" width="45%" alt="Trowser flyout panel" />
+  <img src="Screenshot-JFA.png" width="45%" alt="Trowser popup panel" />
   &nbsp;
   <img src="Screenshot-settings.png" width="45%" alt="Trowser settings window" />
 </p>
 
 ## What is Trowser?
 
-Trowser is a WinUI 3 Windows desktop application that lets you pin browser shortcuts as tray icons. Click a tray icon to open a flyout WebView2 panel right from the taskbar, or pop it out into a standalone window.
+Trowser is a WinUI 3 Windows desktop application that lets you pin browser shortcuts as tray icons. Click a tray icon to open a real popup WebView2 window near the tray, then pin it to keep it alive and topmost.
 
 - Add multiple browser shortcuts, each with its own tray icon
-- Flyout panel opens instantly from the system tray
-- Pop-out button opens a full `BrowserWindow`
-- Configurable flyout size per browser
+- Popup window opens instantly near the system tray
+- Popup hides on deactivation unless pinned
+- Pin mode keeps the popup window alive, topmost, and movable/resizable
+- Configurable popup size per browser
 - Mobile emulation enabled by default
 - Favicon auto-fetched and cached per config
 

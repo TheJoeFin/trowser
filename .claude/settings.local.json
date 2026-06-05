@@ -3,7 +3,15 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(dotnet build:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:blogs.msdn.microsoft.com)",
+      "WebFetch(domain:dotmorten.github.io)",
+      "Bash(cd /tmp)",
+      "Bash(unzip -q /c/Users/josep/.nuget/packages/winuiex/2.9.0/winuiex.2.9.0.nupkg)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

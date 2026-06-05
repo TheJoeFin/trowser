@@ -22,7 +22,6 @@ namespace Trowser;
 public partial class App : Application
 {
     private readonly ConcurrentDictionary<Guid, TrayIcon> _trayIcons = new();
-    private readonly ConcurrentDictionary<Guid, Flyout> _browserFlyouts = new();
     private readonly ConcurrentDictionary<Guid, BrowserWindow> _browserWindows = new();
     private Mutex? _singleInstanceMutex;
     private Views.SettingsWindow? _settingsWindow;
@@ -150,10 +149,9 @@ public partial class App : Application
 
     #region Tray Icon Management
 
-    private async Task InitializeTrayIconsAsync()
+    private async Task InitializeTrayIconsAsync(List<TrayBrowserConfig>? configs = null)
     {
-        ITrayBrowserService trayService = GetService<ITrayBrowserService>();
-        List<TrayBrowserConfig> configs = await trayService.GetAllAsync();
+        configs ??= await GetService<ITrayBrowserService>().GetAllAsync();
 
         Log($"InitializeTrayIconsAsync — {configs.Count} config(s) found");
 
@@ -236,18 +234,12 @@ public partial class App : Application
             Log($"Selected fired for '{config.Name}' (TrayIconId={iconId})");
             try
             {
-                if (TryActivateBrowserWindow(config))
-                {
-                    Log($"Activated existing browser window for '{config.Name}'");
-                    return;
-                }
-
-                args.Flyout = CreateBrowserFlyout(config);
-                Log($"Flyout created successfully for '{config.Name}'");
+                ToggleBrowserWindow(config);
+                Log($"Toggled popup window for '{config.Name}'");
             }
             catch (Exception ex)
             {
-                Log($"CreateBrowserFlyout threw for '{config.Name}': {ex}");
+                Log($"ToggleBrowserWindow threw for '{config.Name}': {ex}");
             }
         };
         icon.ContextMenu += (sender, args) =>
@@ -271,6 +263,7 @@ public partial class App : Application
     private async Task RefreshTrayIconsAsync()
     {
         Log($"RefreshTrayIconsAsync — hiding {_trayIcons.Count} existing icon(s)");
+        List<TrayBrowserConfig> configs = await GetService<ITrayBrowserService>().GetAllAsync();
         foreach (KeyValuePair<Guid, TrayIcon> kvp in _trayIcons)
         {
             kvp.Value.IsVisible = false;
@@ -278,104 +271,84 @@ public partial class App : Application
         }
         _trayIcons.Clear();
 
+        SyncBrowserWindows(configs);
         Log("Existing icons hidden — recreating");
-        await InitializeTrayIconsAsync();
+        await InitializeTrayIconsAsync(configs);
         Log($"RefreshTrayIconsAsync complete — {_trayIcons.Count} icon(s) now active");
     }
 
-    private Flyout CreateBrowserFlyout(TrayBrowserConfig config)
+    private void SyncBrowserWindows(IEnumerable<TrayBrowserConfig> configs)
     {
-        Log($"CreateBrowserFlyout for '{config.Name}' Url='{config.Url}'");
-        BrowserPage browserPage = GetService<BrowserCacheService>().GetOrCreate(config);
+        Dictionary<Guid, TrayBrowserConfig> activeConfigs = configs
+            .Where(config => !config.IsHidden)
+            .ToDictionary(config => config.Id);
 
-        if (_browserFlyouts.TryRemove(config.Id, out Flyout? existingFlyout))
+        foreach (KeyValuePair<Guid, BrowserWindow> kvp in _browserWindows.ToArray())
         {
-            existingFlyout.Content = null;
-            existingFlyout.Hide();
+            if (!activeConfigs.TryGetValue(kvp.Key, out TrayBrowserConfig? config))
+            {
+                Log($"Closing popup window for removed or hidden config {kvp.Key}");
+                kvp.Value.Close();
+                continue;
+            }
+
+            kvp.Value.UpdateConfig(config);
         }
-
-        browserPage.PrepareForFlyout(config.FlyoutWidth, config.FlyoutHeight);
-        browserPage.ViewModel.RequestPopOut = () =>
-        {
-            PopOutBrowser(config);
-        };
-
-        Flyout flyout = new()
-        {
-            Content = browserPage,
-            FlyoutPresenterStyle = CreateNoPaddingStyle(),
-        };
-        _browserFlyouts[config.Id] = flyout;
-
-        flyout.Opened += (s, e) =>
-        {
-            Log($"Flyout opened for '{config.Name}'");
-            browserPage.Configure(config.Url, config.Name, config.Id);
-        };
-        flyout.Closing += (s, e) =>
-        {
-            Log($"Flyout closing for '{config.Name}'");
-            if (_browserFlyouts.TryGetValue(config.Id, out Flyout? activeFlyout) && ReferenceEquals(activeFlyout, flyout))
-            {
-                _browserFlyouts.TryRemove(config.Id, out _);
-            }
-
-            if (s is Flyout f && ReferenceEquals(f.Content, browserPage))
-            {
-                f.Content = null;
-                browserPage.CloseWebView();
-            }
-        };
-
-        return flyout;
     }
 
-    private static Style CreateNoPaddingStyle()
+    private void ToggleBrowserWindow(TrayBrowserConfig config)
     {
-        Style style = new(typeof(FlyoutPresenter));
-        style.Setters.Add(new Setter(FlyoutPresenter.PaddingProperty, new Thickness(0)));
-        style.Setters.Add(new Setter(FlyoutPresenter.CornerRadiusProperty, new CornerRadius(8)));
-        return style;
+        BrowserWindow window = GetOrCreateBrowserWindow(config);
+        window.UpdateConfig(config);
+
+        if (window.IsPopupVisible)
+        {
+            window.HidePopup();
+        }
+        else
+        {
+            window.ShowNearCursor();
+        }
     }
 
-    private bool TryActivateBrowserWindow(TrayBrowserConfig config)
+    public void OpenBrowserWindow(TrayBrowserConfig config) => ShowPinnedBrowserWindow(config);
+
+    private void ShowPinnedBrowserWindow(TrayBrowserConfig config)
+    {
+        BrowserWindow window = GetOrCreateBrowserWindow(config);
+        window.UpdateConfig(config);
+        window.SetPinned(true);
+
+        if (window.IsPopupVisible)
+        {
+            window.Activate();
+        }
+        else
+        {
+            window.ShowNearCursor(pinWindow: true);
+        }
+    }
+
+    private BrowserWindow GetOrCreateBrowserWindow(TrayBrowserConfig config)
     {
         if (_browserWindows.TryGetValue(config.Id, out BrowserWindow? existingWindow))
         {
-            existingWindow.Title = $"Trowser - {config.Name}";
-            existingWindow.Activate();
-            return true;
-        }
-
-        return false;
-    }
-
-    public void OpenBrowserWindow(TrayBrowserConfig config) => PopOutBrowser(config);
-
-    private void PopOutBrowser(TrayBrowserConfig config)
-    {
-        if (TryActivateBrowserWindow(config))
-        {
-            return;
+            return existingWindow;
         }
 
         BrowserPage browserPage = GetService<BrowserCacheService>().GetOrCreate(config);
-        if (_browserFlyouts.TryRemove(config.Id, out Flyout? existingFlyout))
-        {
-            existingFlyout.Content = null;
-            existingFlyout.Hide();
-        }
-
-        BrowserWindow window = new(config.Name);
-        window.AttachBrowserPage(browserPage, config.Name);
-        browserPage.Configure(config.Url, config.Name, config.Id);
+        BrowserWindow window = new();
+        window.AttachBrowserPage(browserPage);
+        window.UpdateConfig(config);
         window.Closed += (_, _) =>
         {
             window.DetachBrowserPage();
             _browserWindows.TryRemove(config.Id, out _);
+            GetService<BrowserCacheService>().Remove(config.Id);
         };
+
         _browserWindows[config.Id] = window;
-        window.Activate();
+        return window;
     }
 
     #endregion
@@ -448,14 +421,7 @@ public partial class App : Application
 
     private void ExitApplication()
     {
-        foreach (KeyValuePair<Guid, Flyout> kvp in _browserFlyouts)
-        {
-            kvp.Value.Content = null;
-        }
-        _browserFlyouts.Clear();
-
-        // Close all browser windows
-        foreach (KeyValuePair<Guid, BrowserWindow> kvp in _browserWindows)
+        foreach (KeyValuePair<Guid, BrowserWindow> kvp in _browserWindows.ToArray())
         {
             kvp.Value.Close();
         }

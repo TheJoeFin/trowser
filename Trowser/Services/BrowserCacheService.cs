@@ -9,18 +9,9 @@ public sealed class BrowserCacheService
 {
     private readonly ConcurrentDictionary<Guid, BrowserPage> _activePages = new();
 
-    // Caching disabled — always creates a fresh page and closes the previous one.
     public BrowserPage GetOrCreate(TrayBrowserConfig config)
     {
-        var newPage = new BrowserPage();
-
-        if (_activePages.TryRemove(config.Id, out BrowserPage? oldPage))
-        {
-            oldPage.CloseWebView();
-        }
-
-        _activePages[config.Id] = newPage;
-        return newPage;
+        return _activePages.GetOrAdd(config.Id, _ => new BrowserPage());
     }
 
     public void Remove(Guid configId)

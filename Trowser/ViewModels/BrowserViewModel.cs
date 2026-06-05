@@ -22,13 +22,14 @@ public partial class BrowserViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(GoForwardCommand))]
     private bool _canGoForward;
 
-    public Action? RequestPopOut { get; set; }
+    [ObservableProperty]
+    private bool _isPinned;
+
+    public Action<bool>? RequestPinChanged { get; set; }
+    public Action? RequestHide { get; set; }
     public Action? RequestGoBack { get; set; }
     public Action? RequestGoForward { get; set; }
     public Action? RequestRefresh { get; set; }
-
-    [RelayCommand]
-    private void PopOut() => RequestPopOut?.Invoke();
 
     [RelayCommand(CanExecute = nameof(CanGoBack))]
     private void GoBack() => RequestGoBack?.Invoke();
@@ -38,4 +39,9 @@ public partial class BrowserViewModel : ObservableObject
 
     [RelayCommand]
     private void Refresh() => RequestRefresh?.Invoke();
+
+    [RelayCommand]
+    private void Hide() => RequestHide?.Invoke();
+
+    partial void OnIsPinnedChanged(bool value) => RequestPinChanged?.Invoke(value);
 }

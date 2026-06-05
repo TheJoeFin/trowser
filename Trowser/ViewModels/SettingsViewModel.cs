@@ -136,8 +136,8 @@ public partial class SettingsViewModel : ObservableObject
             Url = EditUrl,
             IconPath = EditIconPath,
             IconMode = EditIconMode,
-            FlyoutWidth = (int)EditFlyoutWidth,
-            FlyoutHeight = (int)EditFlyoutHeight,
+            FlyoutWidth = Math.Clamp((int)EditFlyoutWidth, 200, 2000),
+            FlyoutHeight = Math.Clamp((int)EditFlyoutHeight, 200, 2000),
         };
 
         await _trayBrowserService.SaveAsync(config);
@@ -164,7 +164,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void PopOutBrowser()
+    private void ShowPinnedBrowser()
     {
         if (SelectedBrowser is null) return;
         ((App)Microsoft.UI.Xaml.Application.Current).OpenBrowserWindow(SelectedBrowser);

@@ -11,8 +11,8 @@ public sealed partial class SettingsWindow : WinUIEx.WindowEx
     {
         InitializeComponent();
         Title = "Trowser";
-        Width = 900;
-        Height = 620;
+        Width = 1000;
+        Height = 1000;
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets/trowser.ico"));
 
         // Extend content into the title bar for a modern, borderless look.

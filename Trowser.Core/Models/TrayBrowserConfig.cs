@@ -16,4 +16,6 @@ public class TrayBrowserConfig
     public bool IsHidden { get; set; } = false;
     public int FlyoutWidth { get; set; } = 400;
     public int FlyoutHeight { get; set; } = 600;
+    public bool StaleTimeoutEnabled { get; set; } = false;
+    public int StaleTimeoutMinutes { get; set; } = 30;
 }

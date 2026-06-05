@@ -8,8 +8,22 @@ using Trowser.Core.Models;
 
 namespace Trowser.ViewModels;
 
+public record StaleTimeoutOption(int Minutes, string Label);
+
 public partial class SettingsViewModel : ObservableObject
 {
+    public static readonly IReadOnlyList<StaleTimeoutOption> StaleTimeoutOptionsSource =
+    [
+        new(1,   "1 minute"),
+        new(5,   "5 minutes"),
+        new(15,  "15 minutes"),
+        new(30,  "30 minutes"),
+        new(60,  "1 hour"),
+        new(120, "2 hours"),
+        new(240, "4 hours"),
+    ];
+
+    public IReadOnlyList<StaleTimeoutOption> StaleTimeoutOptions => StaleTimeoutOptionsSource;
     private readonly ITrayBrowserService _trayBrowserService;
     private readonly IThemeSelectorService _themeSelectorService;
 
@@ -38,6 +52,12 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private double _editFlyoutHeight = 600;
+
+    [ObservableProperty]
+    private bool _editStaleTimeoutEnabled;
+
+    [ObservableProperty]
+    private StaleTimeoutOption _editStaleTimeoutOption = StaleTimeoutOptionsSource[2]; // 30 min default
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIconModeFetchFavicon))]
@@ -108,6 +128,9 @@ public partial class SettingsViewModel : ObservableObject
         EditIconMode = value.IconMode;
         EditFlyoutWidth = value.FlyoutWidth;
         EditFlyoutHeight = value.FlyoutHeight;
+        EditStaleTimeoutEnabled = value.StaleTimeoutEnabled;
+        EditStaleTimeoutOption = StaleTimeoutOptions.FirstOrDefault(o => o.Minutes == value.StaleTimeoutMinutes)
+            ?? StaleTimeoutOptions[2];
         EditingId = value.Id;
         IsEditing = true;
     }
@@ -122,6 +145,8 @@ public partial class SettingsViewModel : ObservableObject
         EditIconMode = IconMode.FetchFavicon;
         EditFlyoutWidth = 400;
         EditFlyoutHeight = 600;
+        EditStaleTimeoutEnabled = false;
+        EditStaleTimeoutOption = StaleTimeoutOptions[2];
         EditingId = null;
         IsEditing = true;
     }
@@ -138,6 +163,8 @@ public partial class SettingsViewModel : ObservableObject
             IconMode = EditIconMode,
             FlyoutWidth = Math.Clamp((int)EditFlyoutWidth, 200, 2000),
             FlyoutHeight = Math.Clamp((int)EditFlyoutHeight, 200, 2000),
+            StaleTimeoutEnabled = EditStaleTimeoutEnabled,
+            StaleTimeoutMinutes = EditStaleTimeoutOption.Minutes,
         };
 
         await _trayBrowserService.SaveAsync(config);

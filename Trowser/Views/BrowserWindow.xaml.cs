@@ -73,6 +73,7 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
     }
 
     private readonly DispatcherQueueTimer _hideTimer;
+    private readonly DispatcherQueueTimer _staleTimer;
     private BrowserPage? _browserPage;
     private TrayBrowserConfig? _config;
     private OverlappedPresenter? _presenter;
@@ -99,6 +100,10 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
         _hideTimer.Interval = TimeSpan.FromMilliseconds(150);
         _hideTimer.IsRepeating = false;
         _hideTimer.Tick += (_, _) => HideIfFocusLeftWindow();
+
+        _staleTimer = DispatcherQueue.CreateTimer();
+        _staleTimer.IsRepeating = false;
+        _staleTimer.Tick += (_, _) => Close();
     }
 
     public void AttachBrowserPage(BrowserPage browserPage)
@@ -146,6 +151,7 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
 
         MoveAndResizeNearCursor(_config.FlyoutWidth, _config.FlyoutHeight);
         _hideTimer.Stop();
+        _staleTimer.Stop();
         _isShowing = true;
         _isPopupVisible = true;
         Activate();
@@ -164,6 +170,12 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
 
         _isPopupVisible = false;
         this.Hide();
+
+        if (_config is { StaleTimeoutEnabled: true, StaleTimeoutMinutes: > 0 })
+        {
+            _staleTimer.Interval = TimeSpan.FromMinutes(_config.StaleTimeoutMinutes);
+            _staleTimer.Start();
+        }
     }
 
     public void SetPinned(bool isPinned)

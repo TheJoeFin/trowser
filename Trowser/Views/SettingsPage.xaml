@@ -6,6 +6,7 @@
     xmlns:helpers="using:Trowser.Helpers"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:Trowser.Core.Models"
+    xmlns:vm="using:Trowser.ViewModels"
     mc:Ignorable="d">
     <Page.Resources>
         <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
@@ -164,6 +165,25 @@
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModel.EditFlyoutHeight, Mode=TwoWay}" />
                 </Grid>
+
+                <ToggleSwitch
+                    Header="Stale Timeout"
+                    IsOn="{x:Bind ViewModel.EditStaleTimeoutEnabled, Mode=TwoWay}"
+                    OffContent="Disabled"
+                    OnContent="Enabled" />
+
+                <ComboBox
+                    Header="Close hidden window after"
+                    IsEnabled="{x:Bind ViewModel.EditStaleTimeoutEnabled, Mode=OneWay}"
+                    ItemsSource="{x:Bind ViewModel.StaleTimeoutOptions}"
+                    SelectedItem="{x:Bind ViewModel.EditStaleTimeoutOption, Mode=TwoWay}"
+                    Visibility="{x:Bind ViewModel.EditStaleTimeoutEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StaleTimeoutOption">
+                            <TextBlock Text="{x:Bind Label}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
                 <StackPanel
                     Margin="0,8,0,0"

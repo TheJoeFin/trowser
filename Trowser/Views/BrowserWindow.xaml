@@ -8,11 +8,14 @@
     Width="1024"
     Height="768"
     mc:Ignorable="d">
-    <Window.SystemBackdrop>
-        <MicaBackdrop />
-    </Window.SystemBackdrop>
+    <!--<Window.SystemBackdrop>
+        <DesktopAcrylicBackdrop />
+    </Window.SystemBackdrop>-->
 
-    <Grid>
+    <Border
+        BorderBrush="White"
+        BorderThickness="1"
+        CornerRadius="2">
         <ContentPresenter x:Name="BrowserHost" />
-    </Grid>
+    </Border>
 </windowex:WindowEx>

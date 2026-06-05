@@ -149,16 +149,16 @@
                     </Grid.ColumnDefinitions>
                     <NumberBox
                         Grid.Column="0"
-                        Header="Flyout Width (px)"
-                        Maximum="1600"
+                        Header="Popup Width (px)"
+                        Maximum="2000"
                         Minimum="200"
                         SmallChange="10"
                         SpinButtonPlacementMode="Inline"
                         Value="{x:Bind ViewModel.EditFlyoutWidth, Mode=TwoWay}" />
                     <NumberBox
                         Grid.Column="2"
-                        Header="Flyout Height (px)"
-                        Maximum="1200"
+                        Header="Popup Height (px)"
+                        Maximum="2000"
                         Minimum="200"
                         SmallChange="10"
                         SpinButtonPlacementMode="Inline"
@@ -175,10 +175,10 @@
                         Style="{ThemeResource AccentButtonStyle}" />
                     <Button Command="{x:Bind ViewModel.CancelEditCommand}" Content="Cancel" />
                     <AppBarSeparator />
-                    <Button Command="{x:Bind ViewModel.PopOutBrowserCommand}">
+                    <Button Command="{x:Bind ViewModel.ShowPinnedBrowserCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon FontSize="14" Glyph="&#xE8A7;" />
-                            <TextBlock Text="Pop Out" />
+                            <FontIcon FontSize="14" Glyph="&#xE718;" />
+                            <TextBlock Text="Pin Window" />
                         </StackPanel>
                     </Button>
                 </StackPanel>

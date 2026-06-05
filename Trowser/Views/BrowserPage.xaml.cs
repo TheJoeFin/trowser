@@ -46,18 +46,11 @@ public sealed partial class BrowserPage : Page
         }
     }
 
-    public void PrepareForFlyout(int width, int height)
-    {
-        Width = width;
-        Height = height;
-        PopOutButton.Visibility = Visibility.Visible;
-    }
-
-    public void PrepareForWindow()
+    public void PrepareForPopup(bool isPinned)
     {
         Width = double.NaN;
         Height = double.NaN;
-        PopOutButton.Visibility = Visibility.Collapsed;
+        ViewModel.IsPinned = isPinned;
     }
 
     public void ResetNavigation()

@@ -7,10 +7,10 @@
     mc:Ignorable="d">
 
     <StackPanel
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
         MaxWidth="400"
         Padding="40"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
         Spacing="16">
 
         <Image
@@ -20,15 +20,15 @@
             Source="ms-appx:///Assets/Square150x150Logo.png" />
 
         <TextBlock
+            HorizontalAlignment="Center"
             FontSize="28"
             FontWeight="Bold"
-            HorizontalAlignment="Center"
             Text="Trowser" />
 
         <TextBlock
             x:Name="VersionText"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-            HorizontalAlignment="Center" />
+            HorizontalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
         <TextBlock
             HorizontalAlignment="Center"
@@ -36,11 +36,35 @@
             TextAlignment="Center"
             TextWrapping="Wrap" />
 
+        <Border
+            x:Name="StartupSection"
+            Padding="16"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8">
+            <StackPanel Spacing="8">
+                <ToggleSwitch
+                    x:Name="LaunchAtLoginToggle"
+                    Header="Launch at login"
+                    OffContent="Off"
+                    OnContent="On"
+                    Toggled="LaunchAtLoginToggle_Toggled" />
+                <InfoBar
+                    x:Name="DisabledByUserInfo"
+                    Title="Disabled in Task Manager"
+                    IsClosable="False"
+                    IsOpen="False"
+                    Message="To re-enable, open Task Manager, go to Startup Apps, and turn Trowser back on."
+                    Severity="Informational" />
+            </StackPanel>
+        </Border>
+
         <TextBlock
             Margin="0,8,0,0"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
             HorizontalAlignment="Center"
-            Text="© 2025 JoeFinApps" />
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="&#xA9; 2026 JoeFinApps" />
 
     </StackPanel>
 </Page>

@@ -13,6 +13,10 @@ public sealed partial class SettingsWindow : WinUIEx.WindowEx
         Title = "Trowser";
         Width = 1000;
         Height = 600;
+
+        // The settings page is a two-column layout; below this it starts clipping.
+        MinWidth = 720;
+        MinHeight = 480;
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets/trowser.ico"));
 
         // Extend content into the title bar for a modern, borderless look.

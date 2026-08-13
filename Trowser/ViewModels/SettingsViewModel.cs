@@ -35,13 +35,18 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HideToggleLabel))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteBrowserCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ToggleHideBrowserCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ShowPinnedBrowserCommand))]
     private TrayBrowserConfig? _selectedBrowser;
 
     // Form fields for add/edit
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveBrowserCommand))]
     private string _editName = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveBrowserCommand))]
     private string _editUrl = string.Empty;
 
     [ObservableProperty]
@@ -57,7 +62,7 @@ public partial class SettingsViewModel : ObservableObject
     private bool _editStaleTimeoutEnabled;
 
     [ObservableProperty]
-    private StaleTimeoutOption _editStaleTimeoutOption = StaleTimeoutOptionsSource[2]; // 30 min default
+    private StaleTimeoutOption _editStaleTimeoutOption = StaleTimeoutOptionsSource[2]; // 15 min default
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIconModeFetchFavicon))]
@@ -78,8 +83,16 @@ public partial class SettingsViewModel : ObservableObject
 
     public string HideToggleLabel => SelectedBrowser?.IsHidden == true ? "Show" : "Hide";
 
+    private bool HasSelectedBrowser => SelectedBrowser is not null;
+
+    private bool CanSaveBrowser =>
+        !string.IsNullOrWhiteSpace(EditName) && !string.IsNullOrWhiteSpace(EditUrl);
+
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotEditing))]
     private bool _isEditing;
+
+    public bool IsNotEditing => !IsEditing;
 
     [ObservableProperty]
     private Guid? _editingId;
@@ -151,7 +164,7 @@ public partial class SettingsViewModel : ObservableObject
         IsEditing = true;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSaveBrowser))]
     private async Task SaveBrowser()
     {
         TrayBrowserConfig config = new()
@@ -180,7 +193,7 @@ public partial class SettingsViewModel : ObservableObject
         SelectedBrowser = null;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelectedBrowser))]
     private async Task DeleteBrowser()
     {
         if (SelectedBrowser is null) return;
@@ -190,14 +203,14 @@ public partial class SettingsViewModel : ObservableObject
         await LoadBrowsersAsync();
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelectedBrowser))]
     private void ShowPinnedBrowser()
     {
         if (SelectedBrowser is null) return;
         ((App)Microsoft.UI.Xaml.Application.Current).OpenBrowserWindow(SelectedBrowser);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(HasSelectedBrowser))]
     private async Task ToggleHideBrowser()
     {
         if (SelectedBrowser is null) return;

@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using System.Runtime.InteropServices;
 using System.Text;
 using Trowser.Core.Models;
+using Trowser.Services;
 using WinUIEx;
 using WinRT.Interop;
 
@@ -11,20 +12,21 @@ namespace Trowser.Views;
 
 public sealed partial class BrowserWindow : WinUIEx.WindowEx
 {
-    private const int PopupMargin = 12;
-    private const uint MONITOR_DEFAULTTONEAREST = 2;
+    private const int GWL_STYLE = -16;
     private const int GWL_EXSTYLE = -20;
+    private const int WS_CAPTION = 0x00C00000;
+    private const int WS_THICKFRAME = 0x00040000;
     private const int WS_EX_TOOLWINDOW = 0x00000080;
     private const uint GA_ROOT = 2;
-
-    [DllImport("user32.dll")]
-    private static extern bool GetCursorPos(out POINT pt);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
-
-    [DllImport("user32.dll")]
-    private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+    private const int DWMWA_BORDER_COLOR = 34;
+    private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+    private const int DWMWCP_ROUND = 2;
+    private const int DWMWA_COLOR_NONE = unchecked((int)0xFFFFFFFE);
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOZORDER = 0x0004;
+    private const uint SWP_NOACTIVATE = 0x0010;
+    private const uint SWP_FRAMECHANGED = 0x0020;
 
     [DllImport("user32.dll")]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -36,9 +38,6 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
     private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll")]
-    private static extern uint GetDpiForWindow(IntPtr hwnd);
-
-    [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
 
     [DllImport("user32.dll")]
@@ -47,30 +46,11 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetClassName(IntPtr hWnd, StringBuilder className, int maxCount);
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct POINT
-    {
-        public int X;
-        public int Y;
-    }
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct RECT
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct MONITORINFO
-    {
-        public int cbSize;
-        public RECT rcMonitor;
-        public RECT rcWork;
-        public uint dwFlags;
-    }
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint flags);
 
     private readonly DispatcherQueueTimer _hideTimer;
     private readonly DispatcherQueueTimer _staleTimer;
@@ -133,7 +113,7 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
 
         if (_isPopupVisible)
         {
-            AppWindow.Resize(GetScaledPopupSize(config.FlyoutWidth, config.FlyoutHeight));
+            WindowPlacementService.ResizeToLogicalSize(this, config.FlyoutWidth, config.FlyoutHeight);
         }
     }
 
@@ -149,7 +129,9 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
             SetPinned(true);
         }
 
-        MoveAndResizeNearCursor(_config.FlyoutWidth, _config.FlyoutHeight);
+        // Position before showing so the window never flashes at a stale location.
+        WindowPlacementService.PositionWindowNearAnchor(this, _config.FlyoutWidth, _config.FlyoutHeight);
+
         _hideTimer.Stop();
         _staleTimer.Stop();
         _isShowing = true;
@@ -214,6 +196,10 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
         AppWindow.SetPresenter(_presenter);
         AppWindow.IsShownInSwitchers = false;
         UpdatePresenterForPinnedState();
+
+        IntPtr hwnd = WindowNative.GetWindowHandle(this);
+        int cornerPreference = DWMWCP_ROUND;
+        _ = DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ref cornerPreference, sizeof(int));
     }
 
     private void UpdatePresenterForPinnedState()
@@ -225,6 +211,32 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
 
         _presenter.IsResizable = _isPinned;
         _presenter.SetBorderAndTitleBar(_isPinned, _isPinned);
+        ApplyFrameStyles();
+    }
+
+    /// <summary>
+    /// Removes the frame the popup should not have. The presenter's
+    /// SetBorderAndTitleBar(false, false) leaves the caption/resize-frame styles
+    /// behind, which DWM renders as a visible white frame around the popup, so
+    /// they are stripped directly in the unpinned state. The 1px DWM border is
+    /// suppressed in both states.
+    /// </summary>
+    private void ApplyFrameStyles()
+    {
+        IntPtr hwnd = WindowNative.GetWindowHandle(this);
+
+        if (!_isPinned)
+        {
+            int style = GetWindowLong(hwnd, GWL_STYLE);
+            SetWindowLong(hwnd, GWL_STYLE, style & ~(WS_CAPTION | WS_THICKFRAME));
+        }
+
+        int borderColor = DWMWA_COLOR_NONE;
+        _ = DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
+
+        // Style changes only take effect once the non-client area is recalculated.
+        SetWindowPos(hwnd, IntPtr.Zero, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     }
 
     private void ConfigureToolWindow()
@@ -320,49 +332,4 @@ public sealed partial class BrowserWindow : WinUIEx.WindowEx
         _syncingPinState = false;
     }
 
-    private void MoveAndResizeNearCursor(int width, int height)
-    {
-        if (!GetCursorPos(out POINT cursor))
-        {
-            AppWindow.Resize(GetScaledPopupSize(width, height));
-            return;
-        }
-
-        IntPtr monitor = MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO monitorInfo = new()
-        {
-            cbSize = Marshal.SizeOf<MONITORINFO>()
-        };
-
-        if (!GetMonitorInfo(monitor, ref monitorInfo))
-        {
-            AppWindow.Resize(GetScaledPopupSize(width, height));
-            return;
-        }
-
-        Windows.Graphics.SizeInt32 scaledSize = GetScaledPopupSize(width, height);
-        int maxWidth = Math.Max(200, monitorInfo.rcWork.Right - monitorInfo.rcWork.Left - (PopupMargin * 2));
-        int maxHeight = Math.Max(200, monitorInfo.rcWork.Bottom - monitorInfo.rcWork.Top - (PopupMargin * 2));
-        int popupWidth = Math.Min(scaledSize.Width, maxWidth);
-        int popupHeight = Math.Min(scaledSize.Height, maxHeight);
-
-        int preferredX = cursor.X - (popupWidth / 2);
-        int preferredY = cursor.Y - (popupHeight / 2);
-
-        int x = Math.Clamp(preferredX, monitorInfo.rcWork.Left + PopupMargin, monitorInfo.rcWork.Right - popupWidth - PopupMargin);
-        int y = Math.Clamp(preferredY, monitorInfo.rcWork.Top + PopupMargin, monitorInfo.rcWork.Bottom - popupHeight - PopupMargin);
-
-        AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(x, y, popupWidth, popupHeight));
-    }
-
-    private Windows.Graphics.SizeInt32 GetScaledPopupSize(int width, int height)
-    {
-        IntPtr hwnd = WindowNative.GetWindowHandle(this);
-        uint dpi = GetDpiForWindow(hwnd);
-        double scale = Math.Max(dpi, 96) / 96d;
-
-        return new Windows.Graphics.SizeInt32(
-            Math.Max(200, (int)Math.Round(width * scale)),
-            Math.Max(200, (int)Math.Round(height * scale)));
-    }
 }

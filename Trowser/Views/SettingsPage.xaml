@@ -90,13 +90,35 @@
                 </StackPanel>
             </Grid>
 
+            <!--  Empty state — shown until a browser is selected or being added  -->
+            <StackPanel
+                Grid.Column="1"
+                Margin="12,0,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="8"
+                Visibility="{x:Bind ViewModel.IsNotEditing,
+                                    Mode=OneWay}">
+                <FontIcon
+                    FontSize="32"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Glyph="&#xE774;" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="Select a tray browser to edit, or add a new one."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
             <!--  Edit form  -->
-            <ScrollView Grid.Column="1" Padding="0,0,8,0">
-                <StackPanel
-                    Margin="12,0,0,0"
-                    Spacing="12"
-                    Visibility="{x:Bind ViewModel.IsEditing,
-                                        Mode=OneWay}">
+            <ScrollViewer
+                Grid.Column="1"
+                Padding="0,0,8,0"
+                VerticalScrollBarVisibility="Auto"
+                Visibility="{x:Bind ViewModel.IsEditing,
+                                    Mode=OneWay}">
+                <StackPanel Margin="12,0,0,0" Spacing="12">
 
                     <TextBlock
                         FontSize="16"
@@ -189,8 +211,6 @@
 
                     <ComboBox
                         Header="Close hidden window after"
-                        IsEnabled="{x:Bind ViewModel.EditStaleTimeoutEnabled,
-                                           Mode=OneWay}"
                         ItemsSource="{x:Bind ViewModel.StaleTimeoutOptions}"
                         SelectedItem="{x:Bind ViewModel.EditStaleTimeoutOption,
                                               Mode=TwoWay}"
@@ -222,7 +242,7 @@
                         </Button>
                     </StackPanel>
                 </StackPanel>
-            </ScrollView>
+            </ScrollViewer>
         </Grid>
 
         <!--  Theme selector  -->
@@ -230,7 +250,7 @@
             Grid.Row="1"
             Margin="0,12,0,0"
             Padding="12"
-            Background="{ThemeResource CardBackgroundFillColorSecondary}"
+            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
             CornerRadius="8">
             <StackPanel>
                 <TextBlock

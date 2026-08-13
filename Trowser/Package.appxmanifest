@@ -9,7 +9,7 @@
   IgnorableNamespaces="uap uap5 rescap">
 
     <Identity Name="Trowser"
-        Version="1.1.0.0"
+        Version="1.2.0.0"
         Publisher="CN=Joseph Finney, O=Joseph Finney, L=Milwaukee, S=Wisconsin, C=US, PostalCode=53212" />
 
   <mp:PhoneIdentity PhoneProductId="a1b2c3d4-e5f6-7890-abcd-ef1234567890" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
@@ -49,7 +49,7 @@
       </uap:VisualElements>
       <Extensions>
           <uap5:Extension Category="windows.startupTask">
-              <uap5:StartupTask TaskId="TrdoStartup" Enabled="false" DisplayName="Trdo" />
+              <uap5:StartupTask TaskId="TrowserStartupTask" Enabled="false" DisplayName="Trowser" />
           </uap5:Extension>
       </Extensions>
     </Application>

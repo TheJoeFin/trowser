@@ -6,65 +6,77 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <StackPanel
-        MaxWidth="400"
-        Padding="40"
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        Spacing="16">
+    <ScrollViewer x:Name="AboutScroll" VerticalScrollBarVisibility="Auto">
+        <!--  MinHeight keeps the content centered while the window is tall enough, and lets the ScrollViewer take over once it is not.  -->
+        <Grid MinHeight="{Binding ViewportHeight, ElementName=AboutScroll}">
+            <StackPanel
+                MaxWidth="400"
+                Padding="40"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="16">
 
-        <Image
-            Width="80"
-            Height="80"
-            HorizontalAlignment="Center"
-            Source="ms-appx:///Assets/Square150x150Logo.png" />
+                <Image
+                    Width="80"
+                    Height="80"
+                    HorizontalAlignment="Center"
+                    Source="ms-appx:///Assets/Square150x150Logo.png" />
 
-        <TextBlock
-            HorizontalAlignment="Center"
-            FontSize="28"
-            FontWeight="Bold"
-            Text="Trowser" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    FontSize="28"
+                    FontWeight="Bold"
+                    Text="Trowser" />
 
-        <TextBlock
-            x:Name="VersionText"
-            HorizontalAlignment="Center"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock
+                    x:Name="VersionText"
+                    HorizontalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
-        <TextBlock
-            HorizontalAlignment="Center"
-            Text="A browser that lives in the tray. Pin your favorite websites as tray icons for instant access."
-            TextAlignment="Center"
-            TextWrapping="Wrap" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Text="A browser that lives in the tray. Pin your favorite websites as tray icons for instant access."
+                    TextAlignment="Center"
+                    TextWrapping="Wrap" />
 
-        <Border
-            x:Name="StartupSection"
-            Padding="16"
-            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="8">
-            <StackPanel Spacing="8">
-                <ToggleSwitch
-                    x:Name="LaunchAtLoginToggle"
-                    Header="Launch at login"
-                    OffContent="Off"
-                    OnContent="On"
-                    Toggled="LaunchAtLoginToggle_Toggled" />
-                <InfoBar
-                    x:Name="DisabledByUserInfo"
-                    Title="Disabled in Task Manager"
-                    IsClosable="False"
-                    IsOpen="False"
-                    Message="To re-enable, open Task Manager, go to Startup Apps, and turn Trowser back on."
-                    Severity="Informational" />
+                <Border
+                    x:Name="StartupSection"
+                    Padding="16"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <StackPanel Spacing="8">
+                        <ToggleSwitch
+                            x:Name="LaunchAtLoginToggle"
+                            Header="Launch at login"
+                            OffContent="Off"
+                            OnContent="On"
+                            Toggled="LaunchAtLoginToggle_Toggled" />
+                        <InfoBar
+                            x:Name="DisabledByUserInfo"
+                            Title="Disabled in Task Manager"
+                            IsClosable="False"
+                            IsOpen="False"
+                            Message="To re-enable, open Task Manager, go to Startup Apps, and turn Trowser back on."
+                            Severity="Informational" />
+                        <InfoBar
+                            x:Name="ManagedByPolicyInfo"
+                            Title="Managed by your organization"
+                            IsClosable="False"
+                            IsOpen="False"
+                            Message="This setting is controlled by policy and cannot be changed here."
+                            Severity="Informational" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock
+                    Margin="0,8,0,0"
+                    HorizontalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="&#xA9; 2026 JoeFinApps" />
+
             </StackPanel>
-        </Border>
-
-        <TextBlock
-            Margin="0,8,0,0"
-            HorizontalAlignment="Center"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-            Text="&#xA9; 2026 JoeFinApps" />
-
-    </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </Page>

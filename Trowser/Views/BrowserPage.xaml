@@ -6,77 +6,75 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Border BorderBrush="{StaticResource CardStrokeColorDefault}" BorderThickness="2">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <Grid
-                Grid.Row="0"
-                Padding="4,4"
-                Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <Grid
+            Grid.Row="0"
+            Padding="4,4"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-                <Button
-                    Grid.Column="0"
-                    Padding="8,4"
-                    Command="{x:Bind ViewModel.GoBackCommand}"
-                    ToolTipService.ToolTip="Back">
-                    <FontIcon FontSize="14" Glyph="&#xE76B;" />
-                </Button>
+            <Button
+                Grid.Column="0"
+                Padding="8,4"
+                Command="{x:Bind ViewModel.GoBackCommand}"
+                ToolTipService.ToolTip="Back">
+                <FontIcon FontSize="14" Glyph="&#xE76B;" />
+            </Button>
 
-                <Button
-                    Grid.Column="1"
-                    Padding="8,4"
-                    Command="{x:Bind ViewModel.GoForwardCommand}"
-                    ToolTipService.ToolTip="Forward">
-                    <FontIcon FontSize="14" Glyph="&#xE76C;" />
-                </Button>
+            <Button
+                Grid.Column="1"
+                Padding="8,4"
+                Command="{x:Bind ViewModel.GoForwardCommand}"
+                ToolTipService.ToolTip="Forward">
+                <FontIcon FontSize="14" Glyph="&#xE76C;" />
+            </Button>
 
-                <Button
-                    Grid.Column="2"
-                    Padding="8,4"
-                    Command="{x:Bind ViewModel.RefreshCommand}"
-                    ToolTipService.ToolTip="Refresh">
-                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
-                </Button>
+            <Button
+                Grid.Column="2"
+                Padding="8,4"
+                Command="{x:Bind ViewModel.RefreshCommand}"
+                ToolTipService.ToolTip="Refresh">
+                <FontIcon FontSize="14" Glyph="&#xE72C;" />
+            </Button>
 
-                <TextBlock
-                    Grid.Column="3"
-                    Margin="8,0"
-                    VerticalAlignment="Center"
-                    FontWeight="SemiBold"
-                    Text="{x:Bind ViewModel.Name,
-                                  Mode=OneWay}" />
+            <TextBlock
+                Grid.Column="3"
+                Margin="8,0"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="{x:Bind ViewModel.Name,
+                              Mode=OneWay}" />
 
-                <ToggleButton
-                    Grid.Column="4"
-                    Padding="8,4"
-                    IsChecked="{x:Bind ViewModel.IsPinned,
-                                       Mode=TwoWay}"
-                    ToolTipService.ToolTip="Keep this window open and on top">
-                    <FontIcon FontSize="14" Glyph="&#xE718;" />
-                </ToggleButton>
+            <ToggleButton
+                Grid.Column="4"
+                Padding="8,4"
+                IsChecked="{x:Bind ViewModel.IsPinned,
+                                   Mode=TwoWay}"
+                ToolTipService.ToolTip="Keep this window open and on top">
+                <FontIcon FontSize="14" Glyph="&#xE718;" />
+            </ToggleButton>
 
-                <Button
-                    Grid.Column="5"
-                    Padding="8,4"
-                    Command="{x:Bind ViewModel.HideCommand}"
-                    ToolTipService.ToolTip="Hide">
-                    <FontIcon FontSize="14" Glyph="&#xE711;" />
-                </Button>
-            </Grid>
-
-            <WebView2 x:Name="BrowserWebView" Grid.Row="1" />
+            <Button
+                Grid.Column="5"
+                Padding="8,4"
+                Command="{x:Bind ViewModel.HideCommand}"
+                ToolTipService.ToolTip="Hide">
+                <FontIcon FontSize="14" Glyph="&#xE711;" />
+            </Button>
         </Grid>
-    </Border>
+
+        <WebView2 x:Name="BrowserWebView" Grid.Row="1" />
+    </Grid>
 </Page>

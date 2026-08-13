@@ -12,10 +12,5 @@
         <DesktopAcrylicBackdrop />
     </Window.SystemBackdrop>-->
 
-    <Border
-        BorderBrush="White"
-        BorderThickness="1"
-        CornerRadius="2">
-        <ContentPresenter x:Name="BrowserHost" />
-    </Border>
+    <ContentPresenter x:Name="BrowserHost" />
 </windowex:WindowEx>

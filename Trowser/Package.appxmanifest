@@ -49,7 +49,7 @@
       </uap:VisualElements>
       <Extensions>
           <uap5:Extension Category="windows.startupTask">
-              <uap5:StartupTask TaskId="TrdoStartup" Enabled="false" DisplayName="Trdo" />
+              <uap5:StartupTask TaskId="TrowserStartupTask" Enabled="false" DisplayName="Trowser" />
           </uap5:Extension>
       </Extensions>
     </Application>

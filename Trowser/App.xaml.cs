@@ -296,8 +296,29 @@ public partial class App : Application
         }
     }
 
+    /// <summary>
+    /// Points the placement service at the tray icon for this config (each config
+    /// owns its own icon, so the anchor has to be re-selected on every open) and
+    /// snapshots the cursor as the fallback anchor.
+    /// </summary>
+    private void CapturePlacementAnchor(TrayBrowserConfig config)
+    {
+        if (_trayIcons.TryGetValue(config.Id, out TrayIcon? icon))
+        {
+            WindowPlacementService.SetTrayIconSource(icon);
+        }
+        else
+        {
+            WindowPlacementService.ClearTrayIconSource();
+        }
+
+        WindowPlacementService.CapturePointerAnchor();
+    }
+
     private void ToggleBrowserWindow(TrayBrowserConfig config)
     {
+        CapturePlacementAnchor(config);
+
         BrowserWindow window = GetOrCreateBrowserWindow(config);
         window.UpdateConfig(config);
 
@@ -315,6 +336,8 @@ public partial class App : Application
 
     private void ShowPinnedBrowserWindow(TrayBrowserConfig config)
     {
+        CapturePlacementAnchor(config);
+
         BrowserWindow window = GetOrCreateBrowserWindow(config);
         window.UpdateConfig(config);
         window.SetPinned(true);

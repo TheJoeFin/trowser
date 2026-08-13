@@ -9,7 +9,7 @@
   IgnorableNamespaces="uap uap5 rescap">
 
     <Identity Name="Trowser"
-        Version="1.1.0.0"
+        Version="1.2.0.0"
         Publisher="CN=Joseph Finney, O=Joseph Finney, L=Milwaukee, S=Wisconsin, C=US, PostalCode=53212" />
 
   <mp:PhoneIdentity PhoneProductId="a1b2c3d4-e5f6-7890-abcd-ef1234567890" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>

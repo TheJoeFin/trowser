@@ -16,6 +16,14 @@ internal static partial class WindowPlacementService
 {
     private const int WindowMargin = 12;
 
+    /// <summary>
+    /// Smallest popup we will ever place. Configs are clamped to 200-2000 when
+    /// saved from settings, but TrayBrowsers.json is deserialized without
+    /// validation, so a hand-edited or truncated file could otherwise ask for a
+    /// zero-size (invisible, unrecoverable) window.
+    /// </summary>
+    private const int MinimumPopupSize = 200;
+
     private static PointInt32? _lastAnchorPoint;
     private static nint _trayIconWindowHandle;
     private static uint _trayIconId;
@@ -23,6 +31,13 @@ internal static partial class WindowPlacementService
 
     public static void CapturePointerAnchor()
     {
+        // Always drop the previous anchor first. If GetCursorPos fails (it does
+        // when the calling thread is not on the input desktop, e.g. across a
+        // UAC/secure-desktop transition) the last popup's cursor position must
+        // not be silently reused — fall through to the tray-icon/taskbar
+        // fallbacks in GetAnchorPoint instead.
+        _lastAnchorPoint = null;
+
         if (GetCursorPos(out POINT point))
         {
             _lastAnchorPoint = new PointInt32(point.X, point.Y);
@@ -45,6 +60,7 @@ internal static partial class WindowPlacementService
         else
         {
             _hasTrayIconSource = false;
+            App.Log("WindowPlacementService: no tray icon window handle; falling back to pointer placement");
         }
     }
 
@@ -67,14 +83,19 @@ internal static partial class WindowPlacementService
         // anchor's monitor, not the window: a hidden window keeps the DPI of
         // wherever it last was, which goes stale across monitor/scale changes.
         uint dpi = GetDpiForAnchor(anchor, window);
-        int physWidth = ToPhysical(width, dpi);
-        int physHeight = ToPhysical(height, dpi);
+        int physWidth = ToPhysical(Math.Max(width, MinimumPopupSize), dpi);
+        int physHeight = ToPhysical(Math.Max(height, MinimumPopupSize), dpi);
 
         // Trowser-specific: popup size is user-configurable (up to 2000 logical
         // px), so a popup can be larger than the display it opens on. Shrink to
         // the work area rather than letting it hang off the screen edge.
         physWidth = Math.Min(physWidth, workArea.Width);
         physHeight = Math.Min(physHeight, workArea.Height);
+
+        // The gap between the anchor and the popup is a logical measure like the
+        // extents above, so it has to be scaled too — a raw 12px offset collapses
+        // to 6 DIP at 200% and 4 DIP at 300%.
+        int margin = ToPhysical(WindowMargin, dpi);
 
         int x;
         int y;
@@ -91,8 +112,8 @@ internal static partial class WindowPlacementService
             bool placeLeft = anchor.X >= workArea.X + (workArea.Width / 2);
             bool placeAbove = anchor.Y >= workArea.Y + (workArea.Height / 2);
 
-            x = placeLeft ? anchor.X - physWidth - WindowMargin : anchor.X + WindowMargin;
-            y = placeAbove ? anchor.Y - physHeight - WindowMargin : anchor.Y + WindowMargin;
+            x = placeLeft ? anchor.X - physWidth - margin : anchor.X + margin;
+            y = placeAbove ? anchor.Y - physHeight - margin : anchor.Y + margin;
         }
         else if (trayIconAvailable)
         {
@@ -106,16 +127,16 @@ internal static partial class WindowPlacementService
                     ABE_BOTTOM => taskbarRect.Top - physHeight,
                     ABE_TOP => taskbarRect.Bottom,
                     _ => iconRect.Top >= workArea.Y + (workArea.Height / 2)
-                        ? iconRect.Top - physHeight - WindowMargin
-                        : iconRect.Bottom + WindowMargin
+                        ? iconRect.Top - physHeight - margin
+                        : iconRect.Bottom + margin
                 };
             }
             else
             {
                 bool iconOnBottomHalf = iconRect.Top >= workArea.Y + (workArea.Height / 2);
                 y = iconOnBottomHalf
-                    ? iconRect.Top - physHeight - WindowMargin
-                    : iconRect.Bottom + WindowMargin;
+                    ? iconRect.Top - physHeight - margin
+                    : iconRect.Bottom + margin;
             }
         }
         else if (TryGetTaskbarRect(out RECT taskbarRect, out uint taskbarEdge))
@@ -126,8 +147,8 @@ internal static partial class WindowPlacementService
             x = taskbarEdge switch
             {
                 ABE_BOTTOM or ABE_TOP => isRtl
-                    ? taskbarRect.Left + WindowMargin
-                    : taskbarRect.Right - WindowMargin - physWidth,
+                    ? taskbarRect.Left + margin
+                    : taskbarRect.Right - margin - physWidth,
                 _ => workArea.X + (workArea.Width / 2) - (physWidth / 2)
             };
 
@@ -143,8 +164,8 @@ internal static partial class WindowPlacementService
             if (taskbarEdge is ABE_LEFT or ABE_RIGHT)
             {
                 x = taskbarEdge == ABE_LEFT
-                    ? taskbarRect.Right + WindowMargin
-                    : taskbarRect.Left - physWidth - WindowMargin;
+                    ? taskbarRect.Right + margin
+                    : taskbarRect.Left - physWidth - margin;
             }
         }
         else
@@ -152,7 +173,7 @@ internal static partial class WindowPlacementService
             bool placeAbove = anchor.Y >= workArea.Y + (workArea.Height / 2);
 
             x = anchor.X - (physWidth / 2);
-            y = placeAbove ? anchor.Y - physHeight - WindowMargin : anchor.Y + WindowMargin;
+            y = placeAbove ? anchor.Y - physHeight - margin : anchor.Y + margin;
         }
 
         int maxX = Math.Max(workArea.X, workArea.X + workArea.Width - physWidth);
@@ -176,7 +197,9 @@ internal static partial class WindowPlacementService
             dpi = 96;
         }
 
-        window.AppWindow.Resize(new SizeInt32(ToPhysical(width, dpi), ToPhysical(height, dpi)));
+        window.AppWindow.Resize(new SizeInt32(
+            ToPhysical(Math.Max(width, MinimumPopupSize), dpi),
+            ToPhysical(Math.Max(height, MinimumPopupSize), dpi)));
     }
 
     /// <summary>
@@ -275,10 +298,13 @@ internal static partial class WindowPlacementService
                 hwnd = handle;
                 return true;
             }
+
+            App.Log($"WindowPlacementService: TrayIcon._windowHandle unavailable (field found: {field is not null})");
         }
-        catch
+        catch (Exception ex)
         {
             // WinUIEx internals may change across versions
+            App.Log($"WindowPlacementService: failed to read TrayIcon._windowHandle: {ex}");
         }
 
         return false;
